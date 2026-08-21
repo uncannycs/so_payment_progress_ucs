@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <data>
+        <record id="view_order_tree" model="ir.ui.view">
+            <field name="name">sale.order.list.inherit</field>
+            <field name="model">sale.order</field>
+            <field name="inherit_id" ref="sale.view_order_tree"/>
+            <field name="arch" type="xml">
+                 <field name="invoice_status" position="after">
+                     <field name="payment_state" column_invisible="1"/>
+                     <field name="compute_payment_state"
+                            decoration-danger="compute_payment_state and 'Overdue' in compute_payment_state"
+                            decoration-success="compute_payment_state and compute_payment_state == 'Fully Paid'"
+                            decoration-info="compute_payment_state and compute_payment_state == 'Not Paid'"
+                            decoration-warning="compute_payment_state and compute_payment_state == 'Partial Paid'" widget="badge" optional="show"/>
+                </field>
+            </field>
+        </record>
+
+        <record id="view_order_form" model="ir.ui.view">
+            <field name="name">sale.order.form.inherit.payment.status</field>
+            <field name="model">sale.order</field>
+            <field name="inherit_id" ref="sale.view_order_form"/>
+            <field name="arch" type="xml">
+                 <xpath expr="//form/sheet/div[@name='button_box']" position="after">
+                    <field name="payment_state" invisible="1"/>
+                    <field name="ribbon_payment_state" invisible="1"/>
+                    <field name="compute_payment_state" invisible="1"/>
+                    <widget name="web_ribbon" title="Not Paid" bg_color="bg-info" invisible="ribbon_payment_state != 'not_paid'"/>
+                    <widget name="web_ribbon" title="Fully Paid" bg_color="bg-success" invisible="ribbon_payment_state != 'fully_paid'"/>
+                    <widget name="web_ribbon" title="Partial Paid" bg_color="bg-warning" invisible="ribbon_payment_state != 'partial_paid'"/>
+                    <widget name="web_ribbon" title="Overdue" bg_color="bg-danger" invisible="ribbon_payment_state != 'overdue'"/>
+                    <widget name="web_ribbon" title="No Invoice" bg_color="bg-danger" invisible="state != 'sale' or ribbon_payment_state != 'no_invoice'"/>
+                </xpath>
+                <xpath expr="//form/header/button[last()]" position="after">
+                    <field name="show_payment_button" invisible="1"/>
+                    <!-- Register Payment (only invoices / receipts) -->
+                    <button name="action_register_payment" id="account_invoice_payment_btn"
+                            type="object" class="oe_highlight"
+                            invisible="not show_payment_button"
+                            context="{'dont_redirect_to_payments': True}"
+                            string="Register Payment"
+                            groups="account.group_account_invoice"/>
+                </xpath>
+
+                <xpath expr="//group[@name='sale_header']" position="after">
+                    <group name="payment_status" invisible="state != 'sale'" groups="account.group_account_invoice">
+                        <label for="compute_payment_state" string="Payment Status"/>
+                        <field name="compute_payment_state" nolabel="1" decoration-danger="'Overdue' in compute_payment_state" decoration-success="compute_payment_state == 'Fully Paid'" decoration-info="compute_payment_state == 'Not Paid'" decoration-warning="compute_payment_state == 'Partial Paid'" widget="badge" />
+                        <field name="order_amount_residual" class="fw-bold"/>
+                    </group>
+                    <group name="payment_detail" invisible="state != 'sale' or not payments_widget" groups="account.group_account_invoice">
+                        <label for="payments_widget" string="Payment Details"/>
+                        <div class="o_group mt-2 mt-md-0 oe_subtotal_footer oe_left">
+                            <field name="payments_widget" widget="payment"/>
+                        </div>
+                    </group>
+                </xpath>
+            </field>
+        </record>
+
+        <record id="sale_order_view_filter_delivery_state_payment_state" model="ir.ui.view">
+            <field name="name">sale.order.search.inherit.payment.state</field>
+            <field name="model">sale.order</field>
+            <field name="inherit_id" ref="sale.sale_order_view_search_inherit_sale"/>
+            <field name="arch" type="xml">
+                <xpath expr="//filter[@name='order_date']" position="after">
+                    <separator/>
+                        <filter string="Fully Paid" name="fully_paid" domain="[('payment_state','=','fully_paid')]" />
+                        <filter string="Partial Paid" name="partial_paid" domain="[('payment_state','=','partial_paid')]" />
+                        <filter string="Not Paid" name="not_paid" domain="[('payment_state','=','not_paid')]" />
+                        <filter string="Overdue" name="overdue" domain="[('payment_state','=','overdue')]" />
+                        <filter string="No Invoice" name="no_invoice" domain="[('payment_state','=','no_invoice')]" />
+                    <separator/>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

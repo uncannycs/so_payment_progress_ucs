@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<templates xml:space="preserve">
+
+    <t t-name="so_payment_progress_ucs.AccountPaymentPopOver" t-inherit="account.AccountPaymentPopOver" t-inherit-mode="extension">
+        <xpath expr="//button[hasclass('js_unreconcile_payment')]" position="replace">
+            <t t-if="!props.no_unreconcile">
+                <button class="btn btn-sm btn-primary js_unreconcile_payment float-start" t-if="!props.is_exchange" style="margin-top:5px; margin-bottom:5px;" groups="account.group_account_invoice" t-on-click="() => props._onRemoveMoveReconcile(props.move_id, props.partial_id)">Unreconcile</button>
+            </t>
+        </xpath>
+    </t>
+
+</templates>
